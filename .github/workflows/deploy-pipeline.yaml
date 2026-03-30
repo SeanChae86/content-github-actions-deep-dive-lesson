@@ -43,21 +43,22 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: build # Added: Ensures build finishes first
+    needs: build # Ensures the zip file actually exists first
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4 # Added: Brings the zip into this job
+        uses: actions/download-artifact@v4 # STEP 1: Get the file from GitHub's storage
         with:
           name: zipped-bundle
-      - name: Create release
-        id: create_release
-        uses: softprops/action-gh-release@v2 # Recommended: actions/create-release is also deprecated
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2 # STEP 2: Create the page AND attach the file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.run_number }}
           name: Release ${{ github.run_number }}
-          body: New release for ${{ github.sha }}.
+          body: |
+            Automated Release for commit ${{ github.sha }}
+            This release contains the Lambda function source code and all required libraries.
           draft: false
           prerelease: false
-          files: ${{ github.sha }}.zip # Attaches the zip to the release
+          files: ${{ github.sha }}.zip # This looks for the file we just downloaded in Step 1
